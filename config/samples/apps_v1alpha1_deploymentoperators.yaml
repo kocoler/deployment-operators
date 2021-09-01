@@ -1,0 +1,12 @@
+apiVersion: apps.my.domain/v1alpha1
+kind: DeploymentOperators
+metadata:
+  name: deploymentoperators-sample
+  labels:
+    mke: mke # must
+spec:
+  labelSelector:
+    mke: mke
+  customerEndpoints:
+    - host: http://127.0.0.1:8080/api/v1/mke/webhook
+      secret: wwwwwwwwwwwwwwww # 16 , 32, 64

@@ -1,0 +1,7 @@
+domain: my.domain
+repo: github.com/kocoler/deployment-operators
+resources:
+- group: apps
+  kind: DeploymentOperators
+  version: v1alpha1
+version: "2"

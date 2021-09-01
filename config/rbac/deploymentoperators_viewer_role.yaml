@@ -1,0 +1,20 @@
+# permissions for end users to view deploymentoperators.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: deploymentoperators-viewer-role
+rules:
+- apiGroups:
+  - apps.my.domain
+  resources:
+  - deploymentoperators
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.my.domain
+  resources:
+  - deploymentoperators/status
+  verbs:
+  - get
