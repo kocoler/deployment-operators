@@ -10,8 +10,6 @@ import (
 
 // deprecated
 
-// +kubebuilder:webhook:path=/validate-v1-pod,mutating=false,failurePolicy=fail,groups="core",resources=pods,verbs=create;update;delete,versions=v1,name=mpod.kb.io
-
 type PodCollector struct {
 	Client  client.Client
 	decoder *admission.Decoder
