@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -30,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"sync"
 
 	appsv1alpha1 "github.com/kocoler/deployment-operators/api/v1alpha1"
 )
@@ -72,14 +73,14 @@ type Replicas struct {
 // +kubebuilder:rbac:groups=appsv1,resources=replicasets,verbs=get;update;patch;delete;list;watch
 // +kubebuilder:rbac:groups=appsv1,resources=deployments,verbs=get;update;patch;delete;list;watch
 
-func (r *DeploymentOperatorsReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *DeploymentOperatorsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("deploymentoperators", req.NamespacedName)
 
 	var err error
 
 	//fetch the deployment operator instance
 	instance := &appsv1alpha1.DeploymentOperators{}
-	err = r.Client.Get(context.TODO(), req.NamespacedName, instance)
+	err = r.Client.Get(ctx, req.NamespacedName, instance)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			log.Error(err, "Request deployment operator instance failed.")
@@ -100,7 +101,7 @@ func (r *DeploymentOperatorsReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	}
 
 	deploy := &appsv1.Deployment{}
-	err = r.Client.Get(context.TODO(), req.NamespacedName, deploy)
+	err = r.Client.Get(ctx, req.NamespacedName, deploy)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			log.Error(err, "get deployment error")
@@ -131,7 +132,7 @@ func (r *DeploymentOperatorsReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	}
 
 	rs := &appsv1.ReplicaSet{}
-	err = r.Client.Get(context.TODO(), req.NamespacedName, rs)
+	err = r.Client.Get(ctx, req.NamespacedName, rs)
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			log.Error(err, "get replicaset error")
@@ -149,7 +150,7 @@ func (r *DeploymentOperatorsReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 
 		if *rs.Spec.Replicas == 0 {
 			// delete useless rs
-			err = r.Delete(context.TODO(), rs)
+			err = r.Delete(ctx, rs)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
@@ -274,7 +275,7 @@ func (r *ResourceChangedPredicate) Update(e event.UpdateEvent) bool {
 	}
 
 	// deployment need to compare labels
-	if !compareMaps(e.MetaOld.GetLabels(), e.MetaNew.GetLabels()) {
+	if !compareMaps(e.ObjectOld.GetLabels(), e.ObjectNew.GetLabels()) {
 		return true
 	}
 
@@ -298,19 +299,19 @@ func judgeResourceLabel(labels map[string]string) bool {
 }
 
 func (r *ResourceLabelPredicate) Update(e event.UpdateEvent) bool {
-	labels := e.MetaNew.GetLabels()
+	labels := e.ObjectNew.GetLabels()
 
 	return judgeResourceLabel(labels)
 }
 
 func (r *ResourceLabelPredicate) Create(e event.CreateEvent) bool {
-	labels := e.Meta.GetLabels()
+	labels := e.Object.GetLabels()
 
 	return judgeResourceLabel(labels)
 }
 
 func (r *ResourceLabelPredicate) Delete(e event.DeleteEvent) bool {
-	labels := e.Meta.GetLabels()
+	labels := e.Object.GetLabels()
 
 	return judgeResourceLabel(labels)
 }
