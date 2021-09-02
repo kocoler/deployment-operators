@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/go-logr/logr"
@@ -91,7 +90,7 @@ func (r *DeploymentOperatorsReconciler) Reconcile(ctx context.Context, req ctrl.
 			return reconcile.Result{}, err
 		}
 
-		fmt.Println("operator instance !!!!", instance)
+		//fmt.Println("operator instance !!!!", instance)
 
 		r.MessageSenderInstance.Hosts = instance.Spec.CustomerEndpoints
 		r.MessageSenderInstance.Initial = true
@@ -108,7 +107,7 @@ func (r *DeploymentOperatorsReconciler) Reconcile(ctx context.Context, req ctrl.
 			return reconcile.Result{}, nil
 		}
 	} else {
-		fmt.Println("name", deploy.Name)
+		//fmt.Println("name", deploy.Name)
 		// add to map
 		// two status: deployment exists -> continue ... deployment not exists -> update
 		// every goroutine handles different event -> needn't consider concurrent for the same key
@@ -139,7 +138,7 @@ func (r *DeploymentOperatorsReconciler) Reconcile(ctx context.Context, req ctrl.
 			return reconcile.Result{}, nil
 		}
 	} else {
-		fmt.Println("rs name:, rs status:", rs.Name, rs.Status, *rs.Spec.Replicas)
+		//fmt.Println("rs name:, rs status:", rs.Name, rs.Status, *rs.Spec.Replicas)
 
 		var deployName string
 		for _, v := range rs.OwnerReferences {
@@ -170,7 +169,7 @@ func (r *DeploymentOperatorsReconciler) Reconcile(ctx context.Context, req ctrl.
 			r.Replicas.Store(rs.Name, replicaset)
 			r.PendingTask.Store(rs.Name, replicaset)
 		} else if rs.Status.FullyLabeledReplicas != 0 {
-			// unhealthy
+			// unhealthy or updating
 			replicaset := &Replicas{
 				Deployment: deployName,
 				Name:       rs.Name,
@@ -191,13 +190,21 @@ func (r *DeploymentOperatorsReconciler) Reconcile(ctx context.Context, req ctrl.
 			deploy := v.(*Deployments)
 			if deploy.NowVersion == rs.Version {
 				if rs.Status != ReplicaStatusSuccess {
-					// failed / pending
+					// failed / pending(pending/updating)
 					// ori was healthy but rs failed suddenly -> pending
 					_ = r.MessageSenderInstance.SendMessage(Message{
 						MessageType: DeploymentStatusMessage,
 						Version:     rs.Version,
 						Status:      ReplicaStatusPending,
-						Cause:       "deploy failed",
+						Cause:       "deploy pending",
+					})
+				} else {
+					// recover
+					_ = r.MessageSenderInstance.SendMessage(Message{
+						MessageType: DeploymentStatusMessage,
+						Version:     rs.Version,
+						Status:      ReplicaStatusSuccess,
+						Cause:       "deploy recover",
 					})
 				}
 			} else if deploy.TargetVersion == rs.Version {

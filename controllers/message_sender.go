@@ -65,6 +65,7 @@ func (m *MessageSender) SendMessage(message Message) []error {
 			log.Error(err, "marshal content failed")
 		}
 
+		fmt.Println("!!!", string(content), content, host.Secret)
 		encrypted, err := m.encrypt(content, []byte(host.Secret))
 		if err != nil {
 			errs = append(errs, &SendMessageError{
@@ -73,6 +74,7 @@ func (m *MessageSender) SendMessage(message Message) []error {
 			})
 			log.Error(err, "encrypt content failed")
 		}
+		fmt.Println("content!", encrypted)
 
 		body, err := json.Marshal(WebhookContent{
 			Data: encrypted,
@@ -85,11 +87,10 @@ func (m *MessageSender) SendMessage(message Message) []error {
 }
 
 // encrypt str with AES256-CBC, padding with PKCS7
-func (m *MessageSender) encrypt(ori []byte, key []byte) ([]byte, error) {
-	// ori
-	plaintext := make([]byte, aes.BlockSize+len(ori))
+func (m *MessageSender) encrypt(plaintext []byte, key []byte) ([]byte, error) {
+	ivT := make([]byte, aes.BlockSize+len(plaintext))
 	// initialization vector
-	iv := plaintext[:aes.BlockSize]
+	iv := ivT[:aes.BlockSize]
 
 	// block
 	block, err := aes.NewCipher(key)
@@ -107,7 +108,7 @@ func (m *MessageSender) encrypt(ori []byte, key []byte) ([]byte, error) {
 	crypted := make([]byte, len(plaintext))
 	blockMode.CryptBlocks(crypted, plaintext)
 
-	return crypted, nil
+	return (crypted), nil
 }
 
 func (m *MessageSender) send(host string, content []byte) error {
