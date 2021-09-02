@@ -194,9 +194,10 @@ func (r *DeploymentOperatorsReconciler) Reconcile(ctx context.Context, req ctrl.
 					// failed / pending
 					// ori was healthy but rs failed suddenly -> pending
 					_ = r.MessageSenderInstance.SendMessage(Message{
-						Version: rs.Version,
-						Status:  ReplicaStatusPending,
-						Cause:   "deploy failed",
+						MessageType: DeploymentStatusMessage,
+						Version:     rs.Version,
+						Status:      ReplicaStatusPending,
+						Cause:       "deploy failed",
 					})
 				}
 			} else if deploy.TargetVersion == rs.Version {
@@ -205,25 +206,28 @@ func (r *DeploymentOperatorsReconciler) Reconcile(ctx context.Context, req ctrl.
 
 					// send message
 					_ = r.MessageSenderInstance.SendMessage(Message{
-						Version: rs.Version,
-						Status:  ReplicaStatusSuccess,
-						Cause:   "deploy success",
+						MessageType: DeploymentStatusMessage,
+						Version:     rs.Version,
+						Status:      ReplicaStatusSuccess,
+						Cause:       "deploy success",
 					})
 					// TODO
 				} else {
 					// send message
 					_ = r.MessageSenderInstance.SendMessage(Message{
-						Version: rs.Version,
-						Status:  ReplicaStatusPending,
-						Cause:   "deploying",
+						MessageType: DeploymentStatusMessage,
+						Version:     rs.Version,
+						Status:      ReplicaStatusPending,
+						Cause:       "deploying",
 					})
 					// TODO
 				}
 			} else {
 				_ = r.MessageSenderInstance.SendMessage(Message{
-					Version: rs.Version,
-					Status:  ReplicaStatusSuccess,
-					Cause:   "deploy success",
+					MessageType: DeploymentStatusMessage,
+					Version:     rs.Version,
+					Status:      ReplicaStatusSuccess,
+					Cause:       "deploy success",
 				})
 			}
 		}

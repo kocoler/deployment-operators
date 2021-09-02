@@ -9,4 +9,7 @@ const (
 	ReplicaStatusPending = 1
 	ReplicaStatusSuccess = 2
 	ReplicaStatusFailed  = 3
+
+	// message type
+	DeploymentStatusMessage = 1
 )
