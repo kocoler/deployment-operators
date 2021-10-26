@@ -7,4 +7,4 @@ Using webhook mode(for customer).
 
 Send message to every customer endpoints with AES-256/CBC/PKCS7 encrypt.
 
-Simple: [simple](https://github.com/kocoler/deployment-operators/blob/master/config/samples/apps_v1alpha1_deploymentoperators.yaml)
+Sample: [sample](https://github.com/kocoler/deployment-operators/blob/master/config/samples/apps_v1alpha1_deploymentoperators.yaml)
